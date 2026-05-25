@@ -1,0 +1,6 @@
+venv/
+data/
+--pychase--/ 
+*.keras
+.env 
+
