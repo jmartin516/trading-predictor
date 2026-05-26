@@ -209,9 +209,45 @@ trading-predictor/
   dataset por shift y al principio por calentamiento de indicadores, `rolling(N).mean()`,
   patrón "instanciar clase + llamar método" de `ta`, `dropna()` con y sin `subset`, importancia
   de guardar el dataset enriquecido para no recalcular en cada entrenamiento.
-- **Siguiente paso:** Fase 3 — preparar para el modelo. **Split temporal** (NO aleatorio:
-  train = más antiguo, test = más reciente), luego normalización con `StandardScaler` ajustado
-  solo en train. Después de eso, crear ventanas temporales si vamos a usar LSTM.
+- ✅ **`src/model.py` con red densa básica entrenada.** Pipeline completo: carga features de
+  BTC, split temporal 70/15/15, `StandardScaler.fit_transform(X_train)` + `transform` en val/test,
+  red `Dense(32) → Dense(16) → Dense(1, sigmoid)` con `binary_crossentropy` + `adam`, 30 epochs.
+- 🩺 **Diagnóstico del primer entrenamiento:** train_acc subiendo a ~58%, val_acc plana en
+  ~50% (= aleatorio), val_loss subiendo desde epoch ~5 → **overfitting moderado + sin señal en val**.
+  Esto es esperado y educativo: Juan vio overfitting en vivo.
+- 📚 Conceptos nuevos que aprendió Juan en Fase 3-4: `iloc[]` para slicing temporal, split sin
+  mezclar (no `train_test_split`), `df[lista_cols]` vs `df[col]`, `StandardScaler.fit` solo en
+  train (lookahead bias clásico), `n` vs `n-1` en std (NumPy vs pandas vs sklearn), `keras.Sequential`,
+  `Dense`, ReLU/Sigmoid, `model.compile` con optimizer/loss/metrics, `model.fit` con epochs/batch_size/
+  validation_data, lectura de curvas train vs val, diagnóstico de overfitting.
+- 🎨 **Curvas graficadas** con `matplotlib.pyplot.subplots` y `history.history`. Guardadas en
+  `models/training_curves.png`.
+- 🛣️ **Decisión (2026-05-25):** ruta de mejora "las 3 opciones, una por sesión".
+  - **Próxima sesión:** **C — LSTM** (arquitectura con memoria temporal para series).
+  - **Después:** B — regularización (Dropout + EarlyStopping) sobre la red densa actual.
+  - **Después:** A — más features (pct_change, bollinger, volume features).
+  - Cada una en su propia sesión para poder comparar resultados limpiamente.
+- 🛑 **Juan paró aquí para descansar y dejar reposar lo aprendido.** Insistió en que lo de hoy
+  (lookahead bias en target/features, scaler con `fit` solo en train, modelo + overfitting visto
+  en vivo) es lo más importante y necesita integrarlo. **Respetar este ritmo.**
+
+## 🔜 Próximo paso cuando Juan vuelva (NO empezar otras cosas)
+
+Crear `src/model_lstm.py` (archivo **nuevo**, no sobreescribir `model.py` — queremos conservar
+la red densa como baseline para comparar). Estructura:
+
+1. Replicar la carga + split temporal + escalado de `model.py`.
+2. Escribir la función `create_windows(X, y, window_size=24)` que convierte arrays 2D `(N, 6)`
+   en 3D `(N - window_size, window_size, 6)`, y recorta `y` para que cuadre.
+   - Pseudocódigo: bucle `for i in range(window_size, len(X))`, recoge `X[i-window_size:i]` y
+     `y.iloc[i]`, devuelve `np.array(...)` de ambos.
+3. Aplicar a los 3 splits → comprobar shapes esperadas:
+   `(12319, 24, 6)`, `(2621, 24, 6)`, `(2621, 24, 6)`.
+4. Construir modelo con `layers.LSTM(N, input_shape=(24, 6))` → `Dense(1, sigmoid)`.
+5. Compilar + entrenar igual que la densa, comparar curvas y val_accuracy contra baseline.
+
+> 👉 Claude: NO te lances al paso 4-5 hasta cerrar 1-3. Cada paso pequeño, un mensaje. Recuerda
+> que Juan está aprendiendo — explica el porqué de cada cosa, no solo el qué.
 
 > 👉 Claude: cuando Juan vuelva, lee esta sección, salúdalo, recuérdale en qué punto está
 > y propón **el siguiente paso pequeño** (no varios a la vez).

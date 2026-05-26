@@ -1,3 +1,5 @@
+from modulefinder import test
+
 import pandas as pd 
 from ta.momentum import RSIIndicator
 from ta.trend import EMAIndicator, MACD
@@ -37,6 +39,7 @@ def build_features(pair):
     #1 step
     df["future_close"] = df["close"].shift(-24)
     df["label"] = (df["future_close"] > df["close"]).astype(int)
+   
 
     #2 step
     df["sma_24"] = df["close"].rolling(window=24).mean()
@@ -47,8 +50,9 @@ def build_features(pair):
     df["macd_signal"] = macd.macd_signal()
     df["macd_diff"] = macd.macd_diff()
 
-    #3 step - elimninata NAAN values
+    #3 step - eliminate NA values
     df = df.dropna()
+    df = df.drop(columns=["future_close"])
 
     #4 step save
     df.to_csv(f"data/{pair}_features.csv", index=False)
@@ -57,4 +61,21 @@ def build_features(pair):
 pares = ["BTC-USD", "ETH-USD", "LTC-USD"]
 for par in pares:
     build_features(par)
-    
+
+
+features_columns = ["sma_24", "rsi_14", "ema_24", "macd", "macd_signal", "macd_diff"]
+target_column = "label"
+
+X_train = train[features_columns]
+y_train = train[target_column]
+
+X_val = val[features_columns]
+y_val = val[target_column]
+
+X_test = test[features_columns]
+y_test = test[target_column]
+
+# Verification
+print(f"X_train shape: {X_train.shape}, y_train shape: {y_train.shape}")
+print(f"X_val:   {X_val.shape}, y_val:   {y_val.shape}")
+print(f"X_test shape: {X_test.shape}, y_test shape: {y_test.shape}")
