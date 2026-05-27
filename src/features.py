@@ -63,19 +63,3 @@ for par in pares:
     build_features(par)
 
 
-features_columns = ["sma_24", "rsi_14", "ema_24", "macd", "macd_signal", "macd_diff"]
-target_column = "label"
-
-X_train = train[features_columns]
-y_train = train[target_column]
-
-X_val = val[features_columns]
-y_val = val[target_column]
-
-X_test = test[features_columns]
-y_test = test[target_column]
-
-# Verification
-print(f"X_train shape: {X_train.shape}, y_train shape: {y_train.shape}")
-print(f"X_val:   {X_val.shape}, y_val:   {y_val.shape}")
-print(f"X_test shape: {X_test.shape}, y_test shape: {y_test.shape}")
