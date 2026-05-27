@@ -231,12 +231,38 @@ trading-predictor/
   (lookahead bias en target/features, scaler con `fit` solo en train, modelo + overfitting visto
   en vivo) es lo más importante y necesita integrarlo. **Respetar este ritmo.**
 
+---
+
+**Sesión 2026-05-27 (LSTM, paso 1 a medias):**
+- ✅ **`src/model_lstm.py` creado** (archivo nuevo, `model.py` intacto como baseline).
+- ✅ **Mitad superior del paso 1 OK:** imports, carga del CSV de features de BTC con
+  `parse_dates`, split temporal 70/15/15 con `iloc`, prints de verificación de rangos. Juan
+  arregló solo 3 erratas iniciales (`matplotlib.puyplot`→`pyplot`, `ps.read_csv`→`pd`, y las
+  comillas dobles + llaves descuadradas de la línea de print del train).
+- 🔄 **Mitad inferior del paso 1 EN CURSO (con bugs pendientes).** Juan añadió el bloque del
+  scaler bien (`fit_transform` en train, `transform` en val/test), pero la separación X/y de
+  val y test todavía tiene errores. **Para mañana, retocar en `src/model_lstm.py`:**
+  - **Líneas 31-32:** usa `value` (no existe; el DataFrame se llama `val`) y nombres `X_vale`/
+    `y_value` que NO coinciden con `X_val`/`y_val` usados en el print (línea 38) y el scaler
+    (línea 45) → `NameError`. Debe quedar `X_val = val[features_columns]` y `y_val = val[target_column]`.
+  - **Línea 35:** `y_test = test[features_columns]` está mal → `y` es el TARGET, debe ser
+    `test[target_column]` (lo arrastra desde hace 2 rondas, recordárselo).
+  - **Línea 25:** `target_column = ["label"]` es lista → cambiar a string `"label"` para que `y`
+    salga 1D limpio (como en `model.py`).
+- 📌 **Patrón de aprendizaje observado:** a Juan se le escapan despistes de **nombres de
+  variables** (typos, mayúsculas, nombres que no coinciden letra por letra). El concepto lo
+  entiende; falla la consistencia léxica. Insistirle en "decide un nombre y úsalo idéntico en
+  todos lados" y en leer el `NameError` como pista.
+
 ## 🔜 Próximo paso cuando Juan vuelva (NO empezar otras cosas)
 
-Crear `src/model_lstm.py` (archivo **nuevo**, no sobreescribir `model.py` — queremos conservar
-la red densa como baseline para comparar). Estructura:
+**Cerrar el paso 1 de `src/model_lstm.py`** arreglando los 4 retoques de arriba (líneas 25, 31,
+32, 35), y luego **ejecutar el archivo** para confirmar que arranca y las shapes salen bien
+(`X_train` ~ `(12319, 6)`, val/test ~ `(2621, 6)`). Recién entonces pasar al paso 2.
 
-1. Replicar la carga + split temporal + escalado de `model.py`.
+Recordatorio de la hoja de ruta de `model_lstm.py`:
+
+1. ⏳ Carga + split temporal + X/y + escalado (← AQUÍ, casi cerrado, faltan 4 retoques + ejecutar).
 2. Escribir la función `create_windows(X, y, window_size=24)` que convierte arrays 2D `(N, 6)`
    en 3D `(N - window_size, window_size, 6)`, y recorta `y` para que cuadre.
    - Pseudocódigo: bucle `for i in range(window_size, len(X))`, recoge `X[i-window_size:i]` y
